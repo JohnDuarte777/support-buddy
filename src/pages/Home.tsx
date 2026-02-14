@@ -25,16 +25,21 @@ const Home = () => {
   const announcements = getAnnouncements();
   const articles = getArticles().filter(a => a.featured);
 
-  const myTickets = tickets
-    .filter(t => t.requester_id === user?.id)
+  const { isTechnician } = useAuth();
+
+  const relevantTickets = isTechnician
+    ? tickets
+    : tickets.filter(t => t.requester_id === user?.id);
+
+  const myTickets = relevantTickets
     .filter(t => statusFilter === 'all' || t.status === statusFilter)
     .filter(t => !searchQuery || t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.ticket_number.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const stats = {
-    open: tickets.filter(t => t.requester_id === user?.id && t.status === 'OPEN').length,
-    inProgress: tickets.filter(t => t.requester_id === user?.id && t.status === 'IN_PROGRESS').length,
-    waiting: tickets.filter(t => t.requester_id === user?.id && t.status === 'WAITING_USER').length,
-    closed: tickets.filter(t => t.requester_id === user?.id && (t.status === 'CLOSED' || t.status === 'RESOLVED')).length,
+    open: relevantTickets.filter(t => t.status === 'OPEN').length,
+    inProgress: relevantTickets.filter(t => t.status === 'IN_PROGRESS').length,
+    waiting: relevantTickets.filter(t => t.status === 'WAITING_USER').length,
+    closed: relevantTickets.filter(t => t.status === 'CLOSED' || t.status === 'RESOLVED').length,
   };
 
   const handleCreateTicket = (e: React.FormEvent) => {
@@ -152,7 +157,7 @@ const Home = () => {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <CardTitle className="text-lg">My Tickets</CardTitle>
+            <CardTitle className="text-lg">{isTechnician ? 'All Tickets' : 'My Tickets'}</CardTitle>
             <div className="flex gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
